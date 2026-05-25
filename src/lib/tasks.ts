@@ -7,6 +7,7 @@ export const categories = [
 ] as const;
 
 export const priorities = ["Rendah", "Sedang", "Tinggi"] as const;
+export const teamMembers = ["Dhea", "Delia", "Adelia", "Erika"] as const;
 
 export const filters = [
   "Semua",
@@ -21,6 +22,7 @@ export type Priority = (typeof priorities)[number];
 export type TaskFilter = (typeof filters)[number];
 export type CategoryFilter = "Semua" | Category;
 export type ProjectFilter = "Semua" | string;
+export type TeamMember = (typeof teamMembers)[number];
 
 export type Task = {
   id: string;
@@ -31,6 +33,8 @@ export type Task = {
   priority: Priority;
   deadline: string;
   completed: boolean;
+  createdBy: TeamMember;
+  updatedBy: TeamMember;
   createdAt: string;
   updatedAt: string;
 };
@@ -55,6 +59,8 @@ export const priorityStyles: Record<Priority, string> = {
 };
 
 export const storageKey = "checklist-administrasi.tasks";
+export const memberStorageKey = "checklist-administrasi.member";
+export const pinStorageKey = "checklist-administrasi.pin";
 export const fallbackProjectName = "Pekerjaan Umum";
 
 export function todayISO() {
@@ -80,13 +86,19 @@ export function isOverdue(task: Task) {
   return !task.completed && task.deadline < todayISO();
 }
 
-export function createTask(input: TaskInput): Task {
+export function isTeamMember(value: string): value is TeamMember {
+  return teamMembers.includes(value as TeamMember);
+}
+
+export function createTask(input: TaskInput, member: TeamMember): Task {
   const now = new Date().toISOString();
 
   return {
     id: crypto.randomUUID(),
     ...input,
     completed: false,
+    createdBy: member,
+    updatedBy: member,
     createdAt: now,
     updatedAt: now,
   };
@@ -96,6 +108,8 @@ export function normalizeTasks(tasks: Task[]) {
   return tasks.map((task) => ({
     ...task,
     projectName: task.projectName?.trim() || fallbackProjectName,
+    createdBy: isTeamMember(task.createdBy) ? task.createdBy : "Dhea",
+    updatedBy: isTeamMember(task.updatedBy) ? task.updatedBy : "Dhea",
   }));
 }
 
@@ -109,6 +123,8 @@ export const defaultTasks: Task[] = [
     priority: "Sedang",
     deadline: todayISO(),
     completed: false,
+    createdBy: "Dhea",
+    updatedBy: "Dhea",
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   },
@@ -121,6 +137,8 @@ export const defaultTasks: Task[] = [
     priority: "Tinggi",
     deadline: todayISO(),
     completed: false,
+    createdBy: "Delia",
+    updatedBy: "Delia",
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   },
@@ -133,6 +151,8 @@ export const defaultTasks: Task[] = [
     priority: "Rendah",
     deadline: todayISO(),
     completed: true,
+    createdBy: "Erika",
+    updatedBy: "Erika",
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
   },

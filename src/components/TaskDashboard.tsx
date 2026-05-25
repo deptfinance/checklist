@@ -7,20 +7,34 @@ import { ProjectSection } from "@/components/ProjectSection";
 import { ProjectTracker } from "@/components/ProjectTracker";
 import { Sidebar } from "@/components/Sidebar";
 import { SummaryCards } from "@/components/SummaryCards";
+import { TeamAccessBar } from "@/components/TeamAccessBar";
 import { TaskForm } from "@/components/TaskForm";
 import {
   createTask,
   defaultTasks,
+  isTeamMember,
   isOverdue,
   isToday,
+  memberStorageKey,
   normalizeTasks,
+  pinStorageKey,
   storageKey,
   type CategoryFilter,
   type ProjectFilter,
   type Task,
   type TaskFilter,
   type TaskInput,
+  type TeamMember,
 } from "@/lib/tasks";
+import {
+  createTeamTask,
+  deleteTeamTask,
+  fetchTeamTasks,
+  toggleTeamTask,
+  updateTeamTask,
+} from "@/lib/teamApi";
+
+type SyncMode = "loading" | "shared" | "local" | "locked";
 
 export function TaskDashboard() {
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -29,10 +43,22 @@ export function TaskDashboard() {
     useState<CategoryFilter>("Semua");
   const [selectedProject, setSelectedProject] = useState<ProjectFilter>("Semua");
   const [editingTask, setEditingTask] = useState<Task | null>(null);
+  const [activeMember, setActiveMember] = useState<TeamMember | "">("");
+  const [pin, setPin] = useState("");
+  const [syncMode, setSyncMode] = useState<SyncMode>("loading");
+  const [syncMessage, setSyncMessage] = useState("Menyiapkan data team...");
   const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
+    const savedMember = window.localStorage.getItem(memberStorageKey);
+    const savedPin = window.localStorage.getItem(pinStorageKey) ?? "";
     const savedTasks = window.localStorage.getItem(storageKey);
+
+    if (savedMember && isTeamMember(savedMember)) {
+      setActiveMember(savedMember);
+    }
+
+    setPin(savedPin);
 
     if (savedTasks) {
       try {
@@ -45,6 +71,8 @@ export function TaskDashboard() {
     }
 
     setIsLoaded(true);
+    void loadSharedTasks(savedPin, true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -54,6 +82,68 @@ export function TaskDashboard() {
 
     window.localStorage.setItem(storageKey, JSON.stringify(tasks));
   }, [isLoaded, tasks]);
+
+  useEffect(() => {
+    if (activeMember) {
+      window.localStorage.setItem(memberStorageKey, activeMember);
+    }
+  }, [activeMember]);
+
+  useEffect(() => {
+    window.localStorage.setItem(pinStorageKey, pin);
+  }, [pin]);
+
+  useEffect(() => {
+    if (syncMode !== "shared") {
+      return;
+    }
+
+    const intervalId = window.setInterval(() => {
+      void loadSharedTasks(pin, false);
+    }, 7000);
+
+    return () => window.clearInterval(intervalId);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pin, syncMode]);
+
+  async function loadSharedTasks(currentPin = pin, showLoading = true) {
+    if (showLoading) {
+      setSyncMode("loading");
+      setSyncMessage("Menyinkronkan data team...");
+    }
+
+    try {
+      const result = await fetchTeamTasks({ pin: currentPin });
+      const normalizedTasks = normalizeTasks(result.tasks);
+      setTasks(normalizedTasks);
+      setSyncMode("shared");
+      setSyncMessage("Data tersimpan bersama dan otomatis update untuk team.");
+    } catch (error) {
+      const syncError = error as Error & {
+        status?: number;
+        code?: string;
+      };
+
+      if (syncError.status === 401) {
+        setSyncMode("locked");
+        setSyncMessage("Masukkan PIN team untuk membuka data bersama.");
+        return;
+      }
+
+      if (syncError.status === 503) {
+        setSyncMode("local");
+        setSyncMessage(
+          "Shared storage belum aktif di Vercel. App memakai data lokal sementara.",
+        );
+        return;
+      }
+
+      if (showLoading) {
+        setSyncMode("local");
+        setSyncMessage("Gagal sync ke server. App memakai data lokal sementara.");
+      }
+    }
+  }
 
   const projectNames = useMemo(
     () =>
@@ -126,38 +216,111 @@ export function TaskDashboard() {
       .sort((a, b) => a.projectName.localeCompare(b.projectName, "id-ID"));
   }, [filteredTasks]);
 
-  function handleSubmit(input: TaskInput) {
+  async function handleSubmit(input: TaskInput) {
+    if (!activeMember) {
+      setSyncMessage("Pilih nama anggota sebelum input atau edit task.");
+      return;
+    }
+
+    if (syncMode === "locked") {
+      setSyncMessage("Masukkan PIN team lalu klik Sync sebelum mengubah data.");
+      return;
+    }
+
     if (editingTask) {
-      setTasks((currentTasks) =>
-        currentTasks.map((task) =>
-          task.id === editingTask.id
-            ? { ...task, ...input, updatedAt: new Date().toISOString() }
-            : task,
-        ),
-      );
+      if (syncMode === "shared") {
+        const result = await updateTeamTask(editingTask.id, input, {
+          pin,
+          member: activeMember,
+        });
+        setTasks(normalizeTasks(result.tasks));
+      } else {
+        setTasks((currentTasks) =>
+          currentTasks.map((task) =>
+            task.id === editingTask.id
+              ? {
+                  ...task,
+                  ...input,
+                  updatedBy: activeMember,
+                  updatedAt: new Date().toISOString(),
+                }
+              : task,
+          ),
+        );
+      }
+
       setEditingTask(null);
       return;
     }
 
-    setTasks((currentTasks) => [createTask(input), ...currentTasks]);
+    if (syncMode === "shared") {
+      const result = await createTeamTask(input, { pin, member: activeMember });
+      setTasks(normalizeTasks(result.tasks));
+      return;
+    }
+
+    setTasks((currentTasks) => [createTask(input, activeMember), ...currentTasks]);
   }
 
-  function handleToggle(id: string) {
+  async function handleToggle(id: string) {
+    if (!activeMember) {
+      setSyncMessage("Pilih nama anggota sebelum mengubah status task.");
+      return;
+    }
+
+    if (syncMode === "locked") {
+      setSyncMessage("Masukkan PIN team lalu klik Sync sebelum mengubah data.");
+      return;
+    }
+
+    const task = tasks.find((currentTask) => currentTask.id === id);
+
+    if (!task) {
+      return;
+    }
+
+    const completed = !task.completed;
+
+    if (syncMode === "shared") {
+      const result = await toggleTeamTask(id, completed, {
+        pin,
+        member: activeMember,
+      });
+      setTasks(normalizeTasks(result.tasks));
+      return;
+    }
+
     setTasks((currentTasks) =>
-      currentTasks.map((task) =>
-        task.id === id
+      currentTasks.map((currentTask) =>
+        currentTask.id === id
           ? {
-              ...task,
-              completed: !task.completed,
+              ...currentTask,
+              completed,
+              updatedBy: activeMember,
               updatedAt: new Date().toISOString(),
             }
-          : task,
+          : currentTask,
       ),
     );
   }
 
-  function handleDelete(id: string) {
-    setTasks((currentTasks) => currentTasks.filter((task) => task.id !== id));
+  async function handleDelete(id: string) {
+    if (!activeMember) {
+      setSyncMessage("Pilih nama anggota sebelum menghapus task.");
+      return;
+    }
+
+    if (syncMode === "locked") {
+      setSyncMessage("Masukkan PIN team lalu klik Sync sebelum menghapus data.");
+      return;
+    }
+
+    if (syncMode === "shared") {
+      const result = await deleteTeamTask(id, { pin, member: activeMember });
+      setTasks(normalizeTasks(result.tasks));
+    } else {
+      setTasks((currentTasks) => currentTasks.filter((task) => task.id !== id));
+    }
 
     if (editingTask?.id === id) {
       setEditingTask(null);
@@ -177,6 +340,16 @@ export function TaskDashboard() {
         />
 
         <div className="grid gap-5">
+          <TeamAccessBar
+            activeMember={activeMember}
+            pin={pin}
+            syncMode={syncMode}
+            syncMessage={syncMessage}
+            onMemberChange={setActiveMember}
+            onPinChange={setPin}
+            onSync={() => loadSharedTasks(pin, true)}
+          />
+
           <header className="rounded-lg border border-zinc-200 bg-white px-5 py-5 shadow-sm">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
               <div>
@@ -288,6 +461,7 @@ export function TaskDashboard() {
               <TaskForm
                 editingTask={editingTask}
                 projectNames={projectNames}
+                activeMember={activeMember}
                 onSubmit={handleSubmit}
                 onCancelEdit={() => setEditingTask(null)}
               />

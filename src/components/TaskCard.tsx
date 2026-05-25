@@ -1,4 +1,4 @@
-import { CalendarDays, Check, Pencil, Trash2 } from "lucide-react";
+import { CalendarDays, Check, Pencil, Trash2, UserRound } from "lucide-react";
 import {
   categoryStyles,
   formatDate,
@@ -81,6 +81,10 @@ export function TaskCard({ task, onToggle, onEdit, onDelete }: TaskCardProps) {
             <span className="inline-flex items-center gap-1 rounded-md border border-zinc-200 bg-zinc-50 px-2 py-1 font-medium text-zinc-600">
               <CalendarDays className="h-3.5 w-3.5" aria-hidden="true" />
               {formatDate(task.deadline)}
+            </span>
+            <span className="inline-flex items-center gap-1 rounded-md border border-zinc-200 bg-zinc-50 px-2 py-1 font-medium text-zinc-600">
+              <UserRound className="h-3.5 w-3.5" aria-hidden="true" />
+              {task.createdBy} / update {task.updatedBy}
             </span>
           </div>
         </div>

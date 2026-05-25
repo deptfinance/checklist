@@ -1,12 +1,15 @@
 # Checklist Kerja Administrasi
 
-Website checklist kerja administrasi yang simple, modern, dan rapi seperti Notion mini. Dibuat dengan Next.js App Router, TypeScript, Tailwind CSS, dan penyimpanan `localStorage`.
+Website checklist kerja administrasi yang simple, modern, dan rapi seperti Notion mini. Dibuat dengan Next.js App Router, TypeScript, Tailwind CSS, dan shared storage untuk team.
 
 ## Fitur
 
 - Dashboard checklist kerja harian
 - Bagian projek untuk mengelompokkan beberapa task
 - Tracking per projek dengan progress, selesai, belum selesai, dan terlambat
+- Team mode untuk 4 anggota: Dhea, Delia, Adelia, Erika
+- Shared storage lewat Vercel KV/Redis agar data update barengan
+- PIN team opsional melalui environment variable
 - Tambah, edit, hapus task
 - Centang task selesai atau belum selesai
 - Kategori: Administrasi, Keuangan, Dokumen, Follow Up, Lainnya
@@ -23,18 +26,24 @@ Website checklist kerja administrasi yang simple, modern, dan rapi seperti Notio
 ```txt
 src/
   app/
+    api/
+      tasks/
+        route.ts
     globals.css
     layout.tsx
     page.tsx
   components/
     FilterBar.tsx
     ProjectSection.tsx
+    ProjectTracker.tsx
     Sidebar.tsx
     SummaryCards.tsx
+    TeamAccessBar.tsx
     TaskCard.tsx
     TaskDashboard.tsx
     TaskForm.tsx
   lib/
+    teamApi.ts
     tasks.ts
 ```
 
@@ -92,4 +101,21 @@ git push
 4. Framework akan otomatis terdeteksi sebagai **Next.js**.
 5. Klik **Deploy**.
 
-Tidak perlu database atau environment variable untuk versi ini karena data tersimpan di browser menggunakan `localStorage`.
+## Shared Storage Team
+
+Agar 4 anggota bisa input dan melihat update yang sama, aktifkan Vercel KV/Redis di project Vercel.
+
+Environment variable yang dibutuhkan:
+
+```txt
+KV_REST_API_URL=...
+KV_REST_API_TOKEN=...
+```
+
+Jika ingin PIN satu kali untuk team, tambahkan:
+
+```txt
+TEAM_PIN=PIN-RAHASIA
+```
+
+Jika `TEAM_PIN` kosong, website tetap bisa dipakai tanpa PIN. Jika Vercel KV/Redis belum aktif, app akan fallback ke `localStorage` sementara, tetapi data tidak akan sinkron antar perangkat.
