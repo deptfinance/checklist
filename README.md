@@ -5,6 +5,7 @@ Website checklist kerja administrasi yang simple, modern, dan rapi seperti Notio
 ## Fitur
 
 - Dashboard checklist kerja harian
+- Bagian projek untuk mengelompokkan beberapa task
 - Tambah, edit, hapus task
 - Centang task selesai atau belum selesai
 - Kategori: Administrasi, Keuangan, Dokumen, Follow Up, Lainnya
@@ -26,6 +27,7 @@ src/
     page.tsx
   components/
     FilterBar.tsx
+    ProjectSection.tsx
     Sidebar.tsx
     SummaryCards.tsx
     TaskCard.tsx

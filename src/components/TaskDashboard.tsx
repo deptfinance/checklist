@@ -3,15 +3,16 @@
 import { useEffect, useMemo, useState } from "react";
 import { BellRing, ClipboardList } from "lucide-react";
 import { FilterBar } from "@/components/FilterBar";
+import { ProjectSection } from "@/components/ProjectSection";
 import { Sidebar } from "@/components/Sidebar";
 import { SummaryCards } from "@/components/SummaryCards";
-import { TaskCard } from "@/components/TaskCard";
 import { TaskForm } from "@/components/TaskForm";
 import {
   createTask,
   defaultTasks,
   isOverdue,
   isToday,
+  normalizeTasks,
   storageKey,
   type CategoryFilter,
   type Task,
@@ -32,7 +33,7 @@ export function TaskDashboard() {
 
     if (savedTasks) {
       try {
-        setTasks(JSON.parse(savedTasks) as Task[]);
+        setTasks(normalizeTasks(JSON.parse(savedTasks) as Task[]));
       } catch {
         setTasks(defaultTasks);
       }
@@ -60,6 +61,13 @@ export function TaskDashboard() {
     (task) => !task.completed && isToday(task.deadline),
   );
   const overdueTasks = tasks.filter(isOverdue);
+  const projectNames = useMemo(
+    () =>
+      Array.from(new Set(tasks.map((task) => task.projectName))).sort((a, b) =>
+        a.localeCompare(b, "id-ID"),
+      ),
+    [tasks],
+  );
 
   const filteredTasks = useMemo(() => {
     return tasks.filter((task) => {
@@ -89,6 +97,23 @@ export function TaskDashboard() {
       return true;
     });
   }, [activeFilter, selectedCategory, tasks]);
+
+  const projectGroups = useMemo(() => {
+    const groups = new Map<string, Task[]>();
+
+    filteredTasks.forEach((task) => {
+      const group = groups.get(task.projectName) ?? [];
+      group.push(task);
+      groups.set(task.projectName, group);
+    });
+
+    return Array.from(groups.entries())
+      .map(([projectName, projectTasks]) => ({
+        projectName,
+        tasks: projectTasks,
+      }))
+      .sort((a, b) => a.projectName.localeCompare(b.projectName, "id-ID"));
+  }, [filteredTasks]);
 
   function handleSubmit(input: TaskInput) {
     if (editingTask) {
@@ -211,11 +236,12 @@ export function TaskDashboard() {
               </div>
 
               <section className="grid gap-3" aria-label="Daftar task">
-                {filteredTasks.length ? (
-                  filteredTasks.map((task) => (
-                    <TaskCard
-                      key={task.id}
-                      task={task}
+                {projectGroups.length ? (
+                  projectGroups.map((project) => (
+                    <ProjectSection
+                      key={project.projectName}
+                      projectName={project.projectName}
+                      tasks={project.tasks}
                       onToggle={handleToggle}
                       onEdit={setEditingTask}
                       onDelete={handleDelete}
@@ -241,6 +267,7 @@ export function TaskDashboard() {
             <div className="xl:sticky xl:top-5">
               <TaskForm
                 editingTask={editingTask}
+                projectNames={projectNames}
                 onSubmit={handleSubmit}
                 onCancelEdit={() => setEditingTask(null)}
               />

@@ -23,6 +23,7 @@ export type CategoryFilter = "Semua" | Category;
 
 export type Task = {
   id: string;
+  projectName: string;
   title: string;
   description: string;
   category: Category;
@@ -35,7 +36,7 @@ export type Task = {
 
 export type TaskInput = Pick<
   Task,
-  "title" | "description" | "category" | "priority" | "deadline"
+  "projectName" | "title" | "description" | "category" | "priority" | "deadline"
 >;
 
 export const categoryStyles: Record<Category, string> = {
@@ -53,6 +54,7 @@ export const priorityStyles: Record<Priority, string> = {
 };
 
 export const storageKey = "checklist-administrasi.tasks";
+export const fallbackProjectName = "Pekerjaan Umum";
 
 export function todayISO() {
   const today = new Date();
@@ -89,12 +91,20 @@ export function createTask(input: TaskInput): Task {
   };
 }
 
+export function normalizeTasks(tasks: Task[]) {
+  return tasks.map((task) => ({
+    ...task,
+    projectName: task.projectName?.trim() || fallbackProjectName,
+  }));
+}
+
 export const defaultTasks: Task[] = [
   {
     id: "sample-1",
-    title: "Cek email masuk dan buat daftar tindak lanjut",
-    description: "Pisahkan email penting, keuangan, dan permintaan dokumen.",
-    category: "Administrasi",
+    projectName: "PEMBAYARAN TERMIN KEDUA RUKO SEBELAH",
+    title: "SURAT PERJANJIAN TERMIN DUA",
+    description: "Siapkan dokumen perjanjian untuk pembayaran termin kedua.",
+    category: "Dokumen",
     priority: "Sedang",
     deadline: todayISO(),
     completed: false,
@@ -103,9 +113,10 @@ export const defaultTasks: Task[] = [
   },
   {
     id: "sample-2",
-    title: "Rekap bukti pembayaran mingguan",
-    description: "Cocokkan bukti transfer dengan catatan invoice.",
-    category: "Keuangan",
+    projectName: "PEMBAYARAN TERMIN KEDUA RUKO SEBELAH",
+    title: "KWITANSI",
+    description: "Buat dan arsipkan kwitansi pembayaran termin kedua.",
+    category: "Dokumen",
     priority: "Tinggi",
     deadline: todayISO(),
     completed: false,
@@ -114,6 +125,7 @@ export const defaultTasks: Task[] = [
   },
   {
     id: "sample-3",
+    projectName: "Administrasi Harian",
     title: "Arsipkan kontrak vendor ke folder bersama",
     description: "Gunakan format nama file yang sudah disepakati.",
     category: "Dokumen",
