@@ -6,6 +6,7 @@ Website checklist kerja administrasi yang simple, modern, dan rapi seperti Notio
 
 - Dashboard checklist kerja harian
 - Bagian projek untuk mengelompokkan beberapa task
+- Tracking per projek dengan progress, selesai, belum selesai, dan terlambat
 - Tambah, edit, hapus task
 - Centang task selesai atau belum selesai
 - Kategori: Administrasi, Keuangan, Dokumen, Follow Up, Lainnya

@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { BellRing, ClipboardList } from "lucide-react";
 import { FilterBar } from "@/components/FilterBar";
 import { ProjectSection } from "@/components/ProjectSection";
+import { ProjectTracker } from "@/components/ProjectTracker";
 import { Sidebar } from "@/components/Sidebar";
 import { SummaryCards } from "@/components/SummaryCards";
 import { TaskForm } from "@/components/TaskForm";
@@ -15,6 +16,7 @@ import {
   normalizeTasks,
   storageKey,
   type CategoryFilter,
+  type ProjectFilter,
   type Task,
   type TaskFilter,
   type TaskInput,
@@ -25,6 +27,7 @@ export function TaskDashboard() {
   const [activeFilter, setActiveFilter] = useState<TaskFilter>("Semua");
   const [selectedCategory, setSelectedCategory] =
     useState<CategoryFilter>("Semua");
+  const [selectedProject, setSelectedProject] = useState<ProjectFilter>("Semua");
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
 
@@ -52,15 +55,6 @@ export function TaskDashboard() {
     window.localStorage.setItem(storageKey, JSON.stringify(tasks));
   }, [isLoaded, tasks]);
 
-  const completedCount = tasks.filter((task) => task.completed).length;
-  const progress = tasks.length
-    ? Math.round((completedCount / tasks.length) * 100)
-    : 0;
-
-  const dueTodayTasks = tasks.filter(
-    (task) => !task.completed && isToday(task.deadline),
-  );
-  const overdueTasks = tasks.filter(isOverdue);
   const projectNames = useMemo(
     () =>
       Array.from(new Set(tasks.map((task) => task.projectName))).sort((a, b) =>
@@ -69,12 +63,29 @@ export function TaskDashboard() {
     [tasks],
   );
 
-  const filteredTasks = useMemo(() => {
+  const scopedTasks = useMemo(() => {
     return tasks.filter((task) => {
+      const matchesProject =
+        selectedProject === "Semua" || task.projectName === selectedProject;
       const matchesCategory =
         selectedCategory === "Semua" || task.category === selectedCategory;
 
-      if (!matchesCategory) {
+      return matchesProject && matchesCategory;
+    });
+  }, [selectedCategory, selectedProject, tasks]);
+
+  const dueTodayTasks = scopedTasks.filter(
+    (task) => !task.completed && isToday(task.deadline),
+  );
+  const overdueTasks = scopedTasks.filter(isOverdue);
+  const completedCount = scopedTasks.filter((task) => task.completed).length;
+  const progress = scopedTasks.length
+    ? Math.round((completedCount / scopedTasks.length) * 100)
+    : 0;
+
+  const filteredTasks = useMemo(() => {
+    return scopedTasks.filter((task) => {
+      if (selectedProject !== "Semua" && task.projectName !== selectedProject) {
         return false;
       }
 
@@ -96,7 +107,7 @@ export function TaskDashboard() {
 
       return true;
     });
-  }, [activeFilter, selectedCategory, tasks]);
+  }, [activeFilter, scopedTasks, selectedProject]);
 
   const projectGroups = useMemo(() => {
     const groups = new Map<string, Task[]>();
@@ -158,8 +169,11 @@ export function TaskDashboard() {
       <div className="mx-auto grid max-w-7xl gap-5 lg:grid-cols-[260px_minmax(0,1fr)]">
         <Sidebar
           tasks={tasks}
+          projectNames={projectNames}
           selectedCategory={selectedCategory}
+          selectedProject={selectedProject}
           onSelectCategory={setSelectedCategory}
+          onSelectProject={setSelectedProject}
         />
 
         <div className="grid gap-5">
@@ -193,7 +207,13 @@ export function TaskDashboard() {
             </div>
           </header>
 
-          <SummaryCards tasks={tasks} />
+          <SummaryCards tasks={scopedTasks} />
+
+          <ProjectTracker
+            tasks={tasks}
+            selectedProject={selectedProject}
+            onSelectProject={setSelectedProject}
+          />
 
           <section className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_360px] xl:items-start">
             <div className="grid gap-4">

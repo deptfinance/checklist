@@ -20,6 +20,7 @@ export type Category = (typeof categories)[number];
 export type Priority = (typeof priorities)[number];
 export type TaskFilter = (typeof filters)[number];
 export type CategoryFilter = "Semua" | Category;
+export type ProjectFilter = "Semua" | string;
 
 export type Task = {
   id: string;

@@ -1,6 +1,6 @@
 import { FolderKanban } from "lucide-react";
 import { TaskCard } from "@/components/TaskCard";
-import { type Task } from "@/lib/tasks";
+import { isOverdue, type Task } from "@/lib/tasks";
 
 type ProjectSectionProps = {
   projectName: string;
@@ -18,6 +18,8 @@ export function ProjectSection({
   onDelete,
 }: ProjectSectionProps) {
   const completed = tasks.filter((task) => task.completed).length;
+  const pending = tasks.length - completed;
+  const overdue = tasks.filter(isOverdue).length;
   const progress = tasks.length
     ? Math.round((completed / tasks.length) * 100)
     : 0;
@@ -39,6 +41,17 @@ export function ProjectSection({
             <p className="mt-1 text-sm text-zinc-500">
               {completed} dari {tasks.length} task selesai
             </p>
+            <div className="mt-3 flex flex-wrap gap-2 text-xs font-medium">
+              <span className="rounded-md bg-emerald-50 px-2 py-1 text-emerald-700">
+                Selesai {completed}
+              </span>
+              <span className="rounded-md bg-sky-50 px-2 py-1 text-sky-700">
+                Belum selesai {pending}
+              </span>
+              <span className="rounded-md bg-rose-50 px-2 py-1 text-rose-700">
+                Terlambat {overdue}
+              </span>
+            </div>
           </div>
         </div>
 
