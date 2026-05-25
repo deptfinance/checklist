@@ -118,4 +118,4 @@ Jika ingin PIN satu kali untuk team, tambahkan:
 TEAM_PIN=PIN-RAHASIA
 ```
 
-Jika `TEAM_PIN` kosong, website tetap bisa dipakai tanpa PIN. Jika Vercel KV/Redis belum aktif, app akan fallback ke `localStorage` sementara, tetapi data tidak akan sinkron antar perangkat.
+Jika `TEAM_PIN` kosong, website tetap bisa dipakai tanpa PIN. Vercel KV/Redis wajib aktif karena app tidak menyimpan task ke `localStorage`.

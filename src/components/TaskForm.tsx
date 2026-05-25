@@ -15,6 +15,7 @@ type TaskFormProps = {
   editingTask: Task | null;
   projectNames: string[];
   activeMember: TeamMember | "";
+  canWrite: boolean;
   onSubmit: (task: TaskInput) => void;
   onCancelEdit: () => void;
 };
@@ -32,6 +33,7 @@ export function TaskForm({
   editingTask,
   projectNames,
   activeMember,
+  canWrite,
   onSubmit,
   onCancelEdit,
 }: TaskFormProps) {
@@ -84,7 +86,9 @@ export function TaskForm({
           </h2>
           <p className="text-sm text-zinc-500">
             {activeMember
-              ? `Input sebagai ${activeMember}.`
+              ? canWrite
+                ? `Input sebagai ${activeMember}.`
+                : "Shared storage belum aktif."
               : "Pilih nama anggota sebelum input."}
           </p>
         </div>
@@ -213,7 +217,7 @@ export function TaskForm({
 
         <button
           type="submit"
-          disabled={!activeMember}
+          disabled={!activeMember || !canWrite}
           className="mt-1 flex items-center justify-center gap-2 rounded-md bg-zinc-900 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-zinc-700 disabled:cursor-not-allowed disabled:bg-zinc-300"
         >
           {editingTask ? (

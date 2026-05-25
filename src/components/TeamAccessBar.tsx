@@ -25,7 +25,7 @@ export function TeamAccessBar({
   const statusLabel = {
     loading: "Menyinkronkan",
     shared: "Shared",
-    local: "Lokal",
+    local: "Belum aktif",
     locked: "Butuh PIN",
   }[syncMode];
 
