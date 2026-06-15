@@ -53,9 +53,13 @@ export default function Home() {
       <header className="sticky top-0 z-30 border-b border-[#f0b119]/50 bg-white/95 backdrop-blur">
         <nav className="mx-auto flex max-w-7xl items-center justify-between px-5 py-4 sm:px-8">
           <a href="#home" className="flex items-center gap-3">
-            <span className="grid h-10 w-10 place-items-center rounded bg-[#f0b119] text-sm font-bold text-[#0f2b2e]">
-              HY
-            </span>
+            <Image
+              src="/hongyi-logo.png"
+              alt="Logo PT Hongyi Asset Manajemen"
+              width={48}
+              height={48}
+              className="h-11 w-11 rounded-full object-contain"
+            />
             <span className="leading-tight">
               <span className="block text-sm font-semibold uppercase tracking-[0.18em] text-[#f0b119]">
                 PT Hongyi
@@ -110,6 +114,13 @@ export default function Home() {
 
         <div className="relative mx-auto grid min-h-[calc(100vh-73px)] max-w-7xl content-center gap-12 px-5 py-16 sm:px-8 lg:grid-cols-[minmax(0,1fr)_420px] lg:py-20">
           <div className="max-w-3xl">
+            <Image
+              src="/hongyi-logo.png"
+              alt="Logo PT Hongyi Asset Manajemen"
+              width={112}
+              height={112}
+              className="mb-6 h-24 w-24 rounded-full object-contain shadow-[0_12px_35px_rgba(15,43,46,0.18)]"
+            />
             <p className="mb-5 inline-flex items-center gap-2 rounded border border-[#f0b119] bg-[#f0b119] px-3 py-2 text-xs font-bold uppercase tracking-[0.2em] text-[#0f2b2e]">
               <BadgeCheck className="h-4 w-4" aria-hidden="true" />
               Asset management
