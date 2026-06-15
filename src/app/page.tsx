@@ -97,19 +97,28 @@ export default function Home() {
 
       <section
         id="home"
-        className="relative overflow-hidden border-b border-[#f0b119]"
+        className="relative overflow-hidden border-b border-[#f0b119] bg-white"
       >
-        <div className="absolute inset-0">
+        <div className="absolute inset-0 overflow-hidden">
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_76%_30%,rgba(240,177,25,0.16),transparent_34%),linear-gradient(90deg,#ffffff_0%,#ffffff_50%,#fff8e2_100%)]" />
           <Image
-            src="/hongyi-hero.png"
-            alt="Ilustrasi kawasan bisnis dan grafik pertumbuhan aset"
-            fill
+            src="/hongyi-logo.png"
+            alt=""
             priority
-            sizes="100vw"
-            className="object-cover"
+            width={900}
+            height={900}
+            aria-hidden="true"
+            className="absolute -right-20 top-12 h-[420px] w-[420px] rounded-full object-contain opacity-[0.07] sm:h-[560px] sm:w-[560px] lg:right-10 lg:top-4 lg:h-[760px] lg:w-[760px]"
           />
-          <div className="absolute inset-0 bg-white/82" />
-          <div className="absolute inset-y-0 left-0 w-full bg-[linear-gradient(90deg,#ffffff_0%,rgba(255,255,255,0.96)_38%,rgba(255,255,255,0.48)_100%)]" />
+          <Image
+            src="/hongyi-logo.png"
+            alt=""
+            width={520}
+            height={520}
+            aria-hidden="true"
+            className="absolute -bottom-28 left-1/2 h-[300px] w-[300px] -translate-x-1/2 rounded-full object-contain opacity-[0.035] sm:left-1/3 sm:h-[420px] sm:w-[420px]"
+          />
+          <div className="absolute inset-y-0 left-0 w-full bg-[linear-gradient(90deg,#ffffff_0%,rgba(255,255,255,0.98)_46%,rgba(255,255,255,0.58)_100%)]" />
         </div>
 
         <div className="relative mx-auto grid min-h-[calc(100vh-73px)] max-w-7xl content-center gap-12 px-5 py-16 sm:px-8 lg:grid-cols-[minmax(0,1fr)_420px] lg:py-20">
