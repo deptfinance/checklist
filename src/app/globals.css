@@ -34,3 +34,134 @@ select,
 textarea {
   font: inherit;
 }
+
+.nav-link {
+  position: relative;
+  transition: color 180ms ease;
+}
+
+.nav-link::after {
+  position: absolute;
+  right: 0;
+  bottom: -8px;
+  left: 0;
+  height: 2px;
+  content: "";
+  background: #f0b119;
+  transform: scaleX(0);
+  transform-origin: right;
+  transition: transform 220ms ease;
+}
+
+.nav-link:hover {
+  color: #f0b119;
+}
+
+.nav-link:hover::after {
+  transform: scaleX(1);
+  transform-origin: left;
+}
+
+.surface-grid::before {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  content: "";
+  background-image:
+    linear-gradient(rgba(15, 43, 46, 0.045) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(15, 43, 46, 0.045) 1px, transparent 1px);
+  background-size: 52px 52px;
+  mask-image: linear-gradient(90deg, rgba(0, 0, 0, 0.32), transparent 72%);
+}
+
+.hero-watermark {
+  animation: watermark-drift 12s ease-in-out infinite;
+}
+
+.gold-sheen {
+  position: relative;
+  overflow: hidden;
+}
+
+.gold-sheen::after {
+  position: absolute;
+  top: -40%;
+  bottom: -40%;
+  left: -50%;
+  width: 42%;
+  content: "";
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(240, 177, 25, 0.42),
+    transparent
+  );
+  transform: skewX(-18deg);
+  animation: sheen-pass 4.8s ease-in-out infinite;
+}
+
+.card-lift {
+  transition:
+    transform 220ms ease,
+    border-color 220ms ease,
+    box-shadow 220ms ease;
+}
+
+.card-lift:hover {
+  border-color: #f0b119;
+  box-shadow: 0 24px 70px rgba(15, 43, 46, 0.16);
+  transform: translateY(-4px);
+}
+
+.reveal-up {
+  animation: reveal-up 700ms ease both;
+}
+
+@keyframes watermark-drift {
+  0%,
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+
+  50% {
+    transform: translate3d(-12px, 10px, 0) scale(1.015);
+  }
+}
+
+@keyframes sheen-pass {
+  0%,
+  42% {
+    left: -55%;
+  }
+
+  62%,
+  100% {
+    left: 120%;
+  }
+}
+
+@keyframes reveal-up {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-watermark,
+  .gold-sheen::after,
+  .reveal-up {
+    animation: none;
+  }
+
+  .card-lift,
+  .nav-link,
+  .nav-link::after {
+    transition: none;
+  }
+}
